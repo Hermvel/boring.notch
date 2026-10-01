@@ -53,7 +53,7 @@ struct TasksSettings: View {
         Task {
             do {
                 let areas = try await ThingsClient().listContainers(tool: "things_list_areas", serverURL: serverURL, token: token)
-                testResult = "✓ Connected — \(areas.count) areas"
+                testResult = String(localized: "✓ Connected — \(areas.count) areas")
             } catch {
                 testResult = "✗ \(error.localizedDescription)"
             }
@@ -86,7 +86,13 @@ struct ClipboardScreenshotsSettings: View {
                     Text("Show Screenshots tab")
                 }
                 HStack {
-                    Text(screenshots.folderURL?.path ?? "No folder selected")
+                    Group {
+                        if let folder = screenshots.folderURL {
+                            Text(verbatim: folder.path)
+                        } else {
+                            Text("No folder selected")
+                        }
+                    }
                         .lineLimit(1)
                         .truncationMode(.middle)
                         .foregroundStyle(.secondary)
