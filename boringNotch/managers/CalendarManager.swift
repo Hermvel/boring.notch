@@ -192,6 +192,12 @@ class CalendarManager: ObservableObject {
         )
         self.events = eventsResult
     }
+
+    /// Custom: events in an arbitrary range from the calendars selected in Settings
+    /// (used by the Calendar section's month grid and upcoming list).
+    func events(from start: Date, to end: Date) async -> [EventModel] {
+        await calendarService.events(from: start, to: end, calendars: selectedCalendars.map { $0.id })
+    }
     
     func setReminderCompleted(reminderID: String, completed: Bool) async {
         await calendarService.setReminderCompleted(reminderID: reminderID, completed: completed)

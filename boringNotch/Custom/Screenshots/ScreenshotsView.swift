@@ -42,7 +42,7 @@ struct ScreenshotsView: View {
             if manager.folderURL == nil {
                 VStack(spacing: 8) {
                     Image(systemName: "camera.viewfinder").font(.system(size: 18))
-                    Button("Выбрать папку со скриншотами") { manager.chooseFolder() }
+                    Button("Выбрать папку") { manager.chooseFolder() }
                         .font(.system(size: 11))
                 }
                 .foregroundStyle(.gray)
@@ -50,13 +50,15 @@ struct ScreenshotsView: View {
             } else if manager.items.isEmpty {
                 VStack(spacing: 6) {
                     Image(systemName: "photo.on.rectangle").font(.system(size: 18))
-                    Text("Скриншотов пока нет  (⇧⌘4)").font(.system(size: 11))
+                    Text("Скриншотов пока нет  (⇧⌘4)")
+                        .font(.system(size: 11))
+                        .multilineTextAlignment(.center)
                 }
                 .foregroundStyle(.gray)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: 8) {
+                ScrollView(.vertical, showsIndicators: false) {
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 6), GridItem(.flexible(), spacing: 6)], spacing: 6) {
                         ForEach(manager.items) { item in
                             ScreenshotTile(item: item, copied: copiedURL == item.url)
                                 .onTapGesture(count: 2) { manager.openFile(item) }
@@ -114,7 +116,8 @@ private struct ScreenshotTile: View {
                         .font(.system(size: 10, weight: .medium))
                 }
             }
-            .frame(width: 130, height: 82)
+            .frame(maxWidth: .infinity)
+            .frame(height: 64)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(hovering ? Color.white.opacity(0.35) : .clear, lineWidth: 1)

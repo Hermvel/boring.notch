@@ -28,8 +28,8 @@ public enum NotchViews {
     case home
     case shelf
     case tasks
-    case clipboard
-    case screenshots
+    case calendar
+    case clipboard   // clipboard history + screenshots, side by side
 }
 
 enum SettingsEnum {

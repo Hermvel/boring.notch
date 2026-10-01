@@ -142,7 +142,7 @@ struct ContentView: View {
                     }
                     .conditionalModifier(Defaults[.closeGestureEnabled] && Defaults[.enableGestures]) { view in
                         view
-                            .panGesture(direction: .up) { translation, phase in
+                            .panGesture(direction: .up, ignoresMouseWheel: true) { translation, phase in
                                 handleUpGesture(translation: translation, phase: phase)
                             }
                     }
@@ -356,10 +356,10 @@ struct ContentView: View {
                                 ShelfView()
                             case .tasks:
                                 TasksView()
+                            case .calendar:
+                                CalendarSectionView()
                             case .clipboard:
-                                ClipboardView()
-                            case .screenshots:
-                                ScreenshotsView()
+                                ClipboardScreenshotsView()
                             }
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -598,6 +598,8 @@ struct ContentView: View {
 
     private func handleUpGesture(translation: CGFloat, phase: NSEvent.Phase) {
         guard vm.notchState == .open && !vm.isHoveringCalendar else { return }
+        // Custom: scrolling inside sections (tasks, clipboard, calendar…) must not close the notch.
+        guard coordinator.currentView == .home else { return }
 
         withAnimation(animationSpring) {
             gestureProgress = (translation / Defaults[.gestureSensitivity]) * -20

@@ -192,6 +192,7 @@ class BoringViewModel: NSObject, ObservableObject {
     func open() {
         self.notchSize = openNotchSize
         self.notchState = .open
+        SectionMemory.notchWillOpen(coordinator: coordinator)
         
         // Force music information update when notch is opened
         MusicManager.shared.forceUpdate()
@@ -209,13 +210,9 @@ class BoringViewModel: NSObject, ObservableObject {
         self.coordinator.sneakPeek.show = false
         self.edgeAutoOpenActive = false
 
-        // Set the current view to shelf if it contains files and the user enables openShelfByDefault
-        // Otherwise, if the user has not enabled openLastShelfByDefault, set the view to home
-    if !ShelfStateViewModel.shared.isEmpty && Defaults[.openShelfByDefault] {
-            coordinator.currentView = .shelf
-        } else if !coordinator.openLastTabByDefault {
-            coordinator.currentView = .home
-        }
+        // Custom: keep the current section; it is reset to Home on the next open
+        // only if the notch stayed closed longer than SectionMemory.timeout (3 min).
+        SectionMemory.notchDidClose()
     }
 
     func closeHello() {

@@ -45,7 +45,10 @@ struct ThingsTask: Identifiable, Decodable, Hashable {
 struct ThingsContainer: Identifiable, Decodable, Hashable {
     let uuid: String
     let title: String
+    /// Projects only: "open", "completed" or "canceled". Areas have no status.
+    let status: String?
     var id: String { uuid }
+    var isOpen: Bool { status == nil || status == "open" }
 }
 
 enum ThingsClientError: LocalizedError {

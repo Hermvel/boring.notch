@@ -49,8 +49,28 @@ struct ThingsTag: Identifiable, Hashable {
 final class ThingsManager: ObservableObject {
     static let shared = ThingsManager()
 
-    @Published private(set) var areas: [ThingsList] = []
-    @Published private(set) var projects: [ThingsList] = []
+    /// Every open area/project from the server (Settings shows these with on/off toggles).
+    @Published private(set) var allAreas: [ThingsList] = []
+    @Published private(set) var allProjects: [ThingsList] = []
+    @Published private(set) var hiddenListIDs: Set<String> = Set(Defaults[.thingsHiddenListIDs])
+
+    /// What the list picker in the notch offers: open and not hidden in Settings.
+    var areas: [ThingsList] { allAreas.filter { !hiddenListIDs.contains($0.id) } }
+    var projects: [ThingsList] { allProjects.filter { !hiddenListIDs.contains($0.id) } }
+
+    func isListVisible(_ list: ThingsList) -> Bool { !hiddenListIDs.contains(list.id) }
+
+    func setListVisible(_ list: ThingsList, _ visible: Bool) {
+        if visible { hiddenListIDs.remove(list.id) } else { hiddenListIDs.insert(list.id) }
+        Defaults[.thingsHiddenListIDs] = hiddenListIDs.sorted()
+    }
+
+    func setAllVisible(_ lists: [ThingsList], _ visible: Bool) {
+        for list in lists {
+            if visible { hiddenListIDs.remove(list.id) } else { hiddenListIDs.insert(list.id) }
+        }
+        Defaults[.thingsHiddenListIDs] = hiddenListIDs.sorted()
+    }
     @Published private(set) var tasks: [ThingsTask] = []
     @Published private(set) var selectedList: ThingsList = .today
     @Published private(set) var isLoading = false
@@ -93,7 +113,7 @@ final class ThingsManager: ObservableObject {
     private var serverURL: String { Defaults[.thingsServerURL] }
     private var token: String { Defaults[.thingsAuthToken] }
 
-    var allLists: [ThingsList] { ThingsList.builtIns + areas + projects }
+    var allLists: [ThingsList] { ThingsList.builtIns + allAreas + allProjects }
 
     private init() {
         Defaults.publisher(.thingsRefreshMinutes, options: [])
@@ -118,7 +138,7 @@ final class ThingsManager: ObservableObject {
     func activate() {
         if refreshTimer == nil { scheduleTimer() }
         Task {
-            if areas.isEmpty && projects.isEmpty { await loadContainers() }
+            if allAreas.isEmpty && allProjects.isEmpty { await loadContainers() }
             if selectedList.id != Defaults[.thingsLastListID],
                let saved = allLists.first(where: { $0.id == Defaults[.thingsLastListID] }) {
                 selectedList = saved
@@ -128,8 +148,8 @@ final class ThingsManager: ObservableObject {
     }
 
     func reloadEverything() async {
-        areas = []
-        projects = []
+        allAreas = []
+        allProjects = []
         tasks = []
         tagNames = [:]
         selectedTags = []
@@ -162,8 +182,9 @@ final class ThingsManager: ObservableObject {
             async let projectItems = client.listContainers(tool: "things_list_projects", serverURL: serverURL, token: token)
             async let tagItems = client.listContainers(tool: "things_list_tags", serverURL: serverURL, token: token)
             let (a, p, t) = try await (areaItems, projectItems, tagItems)
-            areas = a.map(ThingsList.area)
-            projects = p.map(ThingsList.project)
+            allAreas = a.map(ThingsList.area)
+            // Completed and trashed projects are already excluded by the server; canceled ones are not.
+            allProjects = p.filter(\.isOpen).map(ThingsList.project)
             tagNames = Dictionary(t.map { ($0.uuid, $0.title) }, uniquingKeysWith: { first, _ in first })
         } catch {
             errorMessage = error.localizedDescription
@@ -220,8 +241,8 @@ final class ThingsManager: ObservableObject {
     }
 
     func projectTitle(for task: ThingsTask) -> String? {
-        if let id = task.projectID, let p = projects.first(where: { $0.kind == .project(uuid: id) }) { return p.title }
-        if let id = task.areaID, let a = areas.first(where: { $0.kind == .area(uuid: id) }) { return a.title }
+        if let id = task.projectID, let p = allProjects.first(where: { $0.kind == .project(uuid: id) }) { return p.title }
+        if let id = task.areaID, let a = allAreas.first(where: { $0.kind == .area(uuid: id) }) { return a.title }
         return nil
     }
 }

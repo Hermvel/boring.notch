@@ -15,6 +15,7 @@ struct NotchSidebar: View {
     @Default(.showTasksTab) private var tasksEnabled
     @Default(.showClipboardTab) private var clipboardEnabled
     @Default(.showScreenshotsTab) private var screenshotsEnabled
+    @Default(.showCalendarSection) private var calendarEnabled
     @Namespace private var selection
 
     private struct SidebarItem: Identifiable {
@@ -26,10 +27,12 @@ struct NotchSidebar: View {
 
     private var sections: [SidebarItem] {
         var result = [SidebarItem(view: .home, title: "Главная", icon: "house.fill")]
-        if shelfEnabled { result.append(SidebarItem(view: .shelf, title: "Полка", icon: "tray.fill")) }
+        if shelfEnabled { result.append(SidebarItem(view: .shelf, title: "AirDrop", icon: "antenna.radiowaves.left.and.right")) }
         if tasksEnabled { result.append(SidebarItem(view: .tasks, title: "Задачи", icon: "checklist")) }
-        if clipboardEnabled { result.append(SidebarItem(view: .clipboard, title: "Буфер", icon: "doc.on.clipboard")) }
-        if screenshotsEnabled { result.append(SidebarItem(view: .screenshots, title: "Скриншоты", icon: "camera.viewfinder")) }
+        if calendarEnabled { result.append(SidebarItem(view: .calendar, title: "Календарь", icon: "calendar")) }
+        if clipboardEnabled || screenshotsEnabled {
+            result.append(SidebarItem(view: .clipboard, title: "Буфер", icon: "doc.on.clipboard"))
+        }
         return result
     }
 

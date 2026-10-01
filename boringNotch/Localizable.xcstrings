@@ -8784,7 +8784,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Включить полку"
+            "value" : "Включить раздел AirDrop"
           }
         },
         "tr" : {
@@ -18589,7 +18589,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Полка"
+            "value" : "AirDrop"
           }
         },
         "tr" : {
@@ -23811,6 +23811,96 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Показывать последние %lld"
+          }
+        }
+      }
+    },
+    "Areas in the list picker" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Области в выпадающем списке"
+          }
+        }
+      }
+    },
+    "Projects in the list picker" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проекты в выпадающем списке"
+          }
+        }
+      }
+    },
+    "Nothing loaded yet — check the server connection" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пока ничего не загружено — проверьте подключение к серверу"
+          }
+        }
+      }
+    },
+    "Show all" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать все"
+          }
+        }
+      }
+    },
+    "Hide all" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрыть все"
+          }
+        }
+      }
+    },
+    "Completed, canceled and trashed projects are never shown." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершённые, отменённые и удалённые проекты не показываются никогда."
+          }
+        }
+      }
+    },
+    "Calendar section" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Раздел «Календарь»"
+          }
+        }
+      }
+    },
+    "Show Calendar section in the notch" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать раздел «Календарь» в «чёлке»"
+          }
+        }
+      }
+    },
+    "Upcoming events for %lld days" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предстоящие события на %lld дн."
           }
         }
       }

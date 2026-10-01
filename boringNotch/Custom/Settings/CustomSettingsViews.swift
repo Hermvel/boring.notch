@@ -9,6 +9,7 @@ import SwiftUI
 import Defaults
 
 struct TasksSettings: View {
+    @ObservedObject private var manager = ThingsManager.shared
     @Default(.thingsServerURL) private var serverURL
     @Default(.thingsAuthToken) private var token
     @Default(.thingsRefreshMinutes) private var refreshMinutes
@@ -42,9 +43,49 @@ struct TasksSettings: View {
             } footer: {
                 Text("Address of your self-hosted things-cloud-mcp endpoint. The token is sent as \"Authorization: Bearer …\" if set.")
             }
+
+            listVisibilitySection(title: "Areas in the list picker", lists: manager.allAreas)
+            listVisibilitySection(title: "Projects in the list picker", lists: manager.allProjects)
+        }
+        .task {
+            if manager.allAreas.isEmpty && manager.allProjects.isEmpty && !serverURL.isEmpty {
+                await manager.loadContainers()
+            }
         }
         .formStyle(.grouped)
         .navigationTitle("Tasks")
+    }
+
+    @ViewBuilder
+    private func listVisibilitySection(title: LocalizedStringKey, lists: [ThingsList]) -> some View {
+        Section {
+            if lists.isEmpty {
+                Text("Nothing loaded yet — check the server connection")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(lists) { list in
+                    Toggle(isOn: Binding(
+                        get: { manager.isListVisible(list) },
+                        set: { manager.setListVisible(list, $0) }
+                    )) {
+                        Text(verbatim: list.title)
+                    }
+                }
+            }
+        } header: {
+            HStack {
+                Text(title)
+                Spacer()
+                if !lists.isEmpty {
+                    Button("Show all") { manager.setAllVisible(lists, true) }
+                        .buttonStyle(.link)
+                    Button("Hide all") { manager.setAllVisible(lists, false) }
+                        .buttonStyle(.link)
+                }
+            }
+        } footer: {
+            Text("Completed, canceled and trashed projects are never shown.")
+        }
     }
 
     private func test() {
@@ -106,5 +147,16 @@ struct ClipboardScreenshotsSettings: View {
         }
         .formStyle(.grouped)
         .navigationTitle("Clipboard & Screenshots")
+    }
+}
+
+/// Used inside the original Calendar settings pane.
+struct CalendarUpcomingDaysStepper: View {
+    @Default(.calendarUpcomingDays) private var days
+
+    var body: some View {
+        Stepper(value: $days, in: 1...60) {
+            Text("Upcoming events for \(days) days")
+        }
     }
 }

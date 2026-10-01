@@ -281,7 +281,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
 
-        // Custom: clipboard history must record even while the notch is closed.
+        // Custom: move settings saved under old key names, then start clipboard history
+        // (it must record even while the notch is closed).
+        CustomDefaultsMigration.run()
         Task { @MainActor in ClipboardManager.shared.start() }
 
         NotificationCenter.default.addObserver(

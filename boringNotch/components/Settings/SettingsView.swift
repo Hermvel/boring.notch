@@ -741,6 +741,13 @@ struct CalendarSettings: View {
             Defaults.Toggle(key: .showFullEventTitles) {
                 Text("Always show full event titles")
             }
+            // Custom: separate Calendar section in the notch sidebar
+            Section(header: Text("Calendar section")) {
+                Defaults.Toggle(key: .showCalendarSection) {
+                    Text("Show Calendar section in the notch")
+                }
+                CalendarUpcomingDaysStepper()
+            }
             Section(header: Text("Calendars")) {
                 if calendarManager.calendarAuthorizationStatus != .fullAccess {
                     Text("Calendar access is denied. Please enable it in System Settings.")

@@ -96,7 +96,7 @@ RU = {
     "Enable gestures": "Включить жесты",
     "Enable glowing effect": "Включить свечение",
     "Enable haptic feedback": "Включить тактильный отклик",
-    "Enable shelf": "Включить полку",
+    "Enable shelf": "Включить раздел AirDrop",
     "Enable window shadow": "Тень окна",
     "Enhance your experience with HUDs": "Улучшите работу с HUD",
     "Enjoy your free time!": "Наслаждайтесь свободным временем!",
@@ -196,7 +196,7 @@ RU = {
     "selected": "выбрано",
     "Selected animation": "Выбранная анимация",
     "Settings": "Настройки",
-    "Shelf": "Полка",
+    "Shelf": "AirDrop",
     "Shortcuts": "Сочетания клавиш",
     "Show battery indicator": "Показывать индикатор аккумулятора",
     "Show battery percentage": "Показывать заряд в процентах",
@@ -276,6 +276,15 @@ RU = {
     "No folder selected": "Папка не выбрана",
     "Choose…": "Выбрать…",
     "Show last %lld screenshots": "Показывать последние %lld",
+    "Areas in the list picker": "Области в выпадающем списке",
+    "Projects in the list picker": "Проекты в выпадающем списке",
+    "Nothing loaded yet — check the server connection": "Пока ничего не загружено — проверьте подключение к серверу",
+    "Show all": "Показать все",
+    "Hide all": "Скрыть все",
+    "Completed, canceled and trashed projects are never shown.": "Завершённые, отменённые и удалённые проекты не показываются никогда.",
+    "Calendar section": "Раздел «Календарь»",
+    "Show Calendar section in the notch": "Показывать раздел «Календарь» в «чёлке»",
+    "Upcoming events for %lld days": "Предстоящие события на %lld дн.",
 }
 
 

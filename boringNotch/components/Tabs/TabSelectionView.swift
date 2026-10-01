@@ -19,8 +19,8 @@ let tabs = [
     TabModel(label: "Home", icon: "house.fill", view: .home),
     TabModel(label: "Shelf", icon: "tray.fill", view: .shelf),
     TabModel(label: "Tasks", icon: "checklist", view: .tasks),
-    TabModel(label: "Clipboard", icon: "doc.on.clipboard", view: .clipboard),
-    TabModel(label: "Screenshots", icon: "camera.viewfinder", view: .screenshots)
+    TabModel(label: "Calendar", icon: "calendar", view: .calendar),
+    TabModel(label: "Clipboard", icon: "doc.on.clipboard", view: .clipboard)
 ]
 
 /// Tabs hidden in Settings are skipped.
@@ -29,8 +29,8 @@ private func isTabEnabled(_ view: NotchViews) -> Bool {
     case .home: return true
     case .shelf: return Defaults[.boringShelf]
     case .tasks: return Defaults[.showTasksTab]
-    case .clipboard: return Defaults[.showClipboardTab]
-    case .screenshots: return Defaults[.showScreenshotsTab]
+    case .calendar: return Defaults[.showCalendarSection]
+    case .clipboard: return Defaults[.showClipboardTab] || Defaults[.showScreenshotsTab]
     }
 }
 
