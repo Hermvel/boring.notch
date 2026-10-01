@@ -21,6 +21,7 @@ struct ThingsTask: Identifiable, Decodable, Hashable {
     let deadline: String?
     let projectID: String?
     let areaID: String?
+    let tags: [String]?
 
     var id: String { uuid }
     /// The server also returns canceled tasks; only open ones are shown.
@@ -33,7 +34,7 @@ struct ThingsTask: Identifiable, Decodable, Hashable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case uuid, title, note, status, deadline
+        case uuid, title, note, status, deadline, tags
         case scheduledFor = "scheduled_for"
         case projectID = "project_id"
         case areaID = "area_id"

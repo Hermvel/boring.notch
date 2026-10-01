@@ -16,12 +16,8 @@ struct BoringHeader: View {
     var body: some View {
         HStack(spacing: 0) {
             HStack {
-                // Custom: tabs are always useful now (Tasks / Clipboard / Screenshots), not only for the shelf.
-                if !tvm.isEmpty || coordinator.alwaysShowTabs {
-                    TabSelectionView()
-                } else if vm.notchState == .open {
-                    EmptyView()
-                }
+                // Custom: sections moved to the left sidebar (NotchSidebar) — header stays clean.
+                EmptyView()
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .opacity(vm.notchState == .closed ? 0 : 1)

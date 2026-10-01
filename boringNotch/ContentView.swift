@@ -343,18 +343,26 @@ struct ContentView: View {
               }
               .zIndex(2)
             if vm.notchState == .open {
-                VStack {
-                    switch coordinator.currentView {
-                    case .home:
-                        NotchHomeView(albumArtNamespace: albumArtNamespace)
-                    case .shelf:
-                        ShelfView()
-                    case .tasks:
-                        TasksView()
-                    case .clipboard:
-                        ClipboardView()
-                    case .screenshots:
-                        ScreenshotsView()
+                // Custom layout: section list on the left (1/5), section content on the right (4/5).
+                GeometryReader { geo in
+                    HStack(alignment: .top, spacing: 10) {
+                        NotchSidebar()
+                            .frame(width: max(100, (geo.size.width - 10) / 5))
+                        VStack {
+                            switch coordinator.currentView {
+                            case .home:
+                                NotchHomeView(albumArtNamespace: albumArtNamespace)
+                            case .shelf:
+                                ShelfView()
+                            case .tasks:
+                                TasksView()
+                            case .clipboard:
+                                ClipboardView()
+                            case .screenshots:
+                                ScreenshotsView()
+                            }
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     }
                 }
                 .transition(

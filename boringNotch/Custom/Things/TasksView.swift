@@ -2,8 +2,9 @@
 //  TasksView.swift
 //  boringNotch
 //
-//  The Tasks tab: list switcher on the left, tasks of the selected list on the right.
-//  Click the circle to complete a task; click it again (before the next refresh) to undo.
+//  The Tasks tab.
+//  Top line: list/project picker + tag filter chips + count/refresh.
+//  Below: tasks in two columns. Click the circle to complete; click again (before refresh) to undo.
 //
 
 import SwiftUI
@@ -13,76 +14,41 @@ struct TasksView: View {
     @ObservedObject private var manager = ThingsManager.shared
     @Default(.thingsServerURL) private var serverURL
 
+    private let columns = [
+        GridItem(.flexible(), spacing: 6, alignment: .topLeading),
+        GridItem(.flexible(), spacing: 6, alignment: .topLeading),
+    ]
+
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            sidebar
-                .frame(width: 150)
-            Divider().opacity(0.3)
+        VStack(alignment: .leading, spacing: 6) {
+            topBar
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .padding(.horizontal, 4)
         .onAppear { manager.activate() }
     }
 
-    // MARK: - Sidebar
+    // MARK: - Top bar
 
-    private var sidebar: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 2) {
-                    ForEach(ThingsList.builtIns) { list in
-                        listButton(list)
-                    }
-                }
-            }
-
-            HStack(spacing: 6) {
-                containerMenu
-                Spacer(minLength: 0)
-                Button {
-                    Task { await manager.refresh() }
-                } label: {
-                    Image(systemName: "arrow.clockwise")
-                        .rotationEffect(.degrees(manager.isLoading ? 360 : 0))
-                        .animation(manager.isLoading ? .linear(duration: 1).repeatForever(autoreverses: false) : .default, value: manager.isLoading)
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(.gray)
-                .help("Обновить")
-            }
-            .padding(.top, 4)
+    private var topBar: some View {
+        HStack(spacing: 8) {
+            listPicker
+            tagChips
+            statusAccessories
         }
+        .frame(height: 22)
     }
 
-    private func listButton(_ list: ThingsList) -> some View {
-        let selected = manager.selectedList == list
-        return Button {
-            manager.select(list)
-        } label: {
-            HStack(spacing: 6) {
-                Image(systemName: list.icon)
-                    .frame(width: 14)
-                Text(list.title)
-                    .lineLimit(1)
-                Spacer(minLength: 0)
-            }
-            .font(.system(size: 12, weight: selected ? .semibold : .regular))
-            .foregroundStyle(selected ? .white : .gray)
-            .padding(.vertical, 3)
-            .padding(.horizontal, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(selected ? Color.white.opacity(0.12) : .clear)
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    /// Areas and projects live in a menu — there can be dozens of them.
-    private var containerMenu: some View {
+    /// Drop-down with the built-in lists, areas and projects.
+    private var listPicker: some View {
         Menu {
+            ForEach(ThingsList.builtIns) { list in
+                Button {
+                    manager.select(list)
+                } label: {
+                    Label(list.title, systemImage: list.icon)
+                }
+            }
             if !manager.areas.isEmpty {
                 Section("Области") {
                     ForEach(manager.areas) { list in
@@ -97,67 +63,125 @@ struct TasksView: View {
                     }
                 }
             }
-            if manager.areas.isEmpty && manager.projects.isEmpty {
-                Text("Нет областей и проектов")
-            }
         } label: {
-            Label("Списки", systemImage: "list.bullet")
-                .font(.system(size: 11))
+            HStack(spacing: 5) {
+                Image(systemName: manager.selectedList.icon)
+                    .font(.system(size: 11))
+                Text(manager.selectedList.title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .lineLimit(1)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(.gray)
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(Capsule().fill(Color.white.opacity(0.1)))
+            .frame(maxWidth: 170, alignment: .leading)
         }
-        .menuStyle(.borderlessButton)
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
         .fixedSize()
-        .foregroundStyle(.gray)
+    }
+
+    /// Tags present in the current list; several can be selected (task matches any of them).
+    private var tagChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 4) {
+                if !manager.selectedTags.isEmpty {
+                    chip(title: "Все", selected: false, systemImage: "xmark") {
+                        withAnimation(.smooth(duration: 0.2)) { manager.selectedTags = [] }
+                    }
+                }
+                ForEach(manager.availableTags) { tag in
+                    chip(title: tag.name, selected: manager.selectedTags.contains(tag.id)) {
+                        withAnimation(.smooth(duration: 0.2)) { manager.toggleTag(tag.id) }
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func chip(title: String, selected: Bool, systemImage: String? = nil, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 3) {
+                if let systemImage {
+                    Image(systemName: systemImage).font(.system(size: 8, weight: .bold))
+                }
+                Text(title).lineLimit(1)
+            }
+            .font(.system(size: 10, weight: selected ? .semibold : .regular))
+            .foregroundStyle(selected ? .black : .gray)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(
+                Capsule().fill(selected ? Color.white.opacity(0.85) : Color.white.opacity(0.08))
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var statusAccessories: some View {
+        HStack(spacing: 6) {
+            if let error = manager.errorMessage {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.orange)
+                    .help(error)
+            }
+            Text("\(manager.visibleTasks.count - manager.visibleTasks.filter { manager.recentlyCompleted.contains($0.uuid) }.count)")
+                .font(.system(size: 11).monospacedDigit())
+                .foregroundStyle(.gray)
+            Button {
+                Task { await manager.refresh() }
+            } label: {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 11))
+                    .rotationEffect(.degrees(manager.isLoading ? 360 : 0))
+                    .animation(manager.isLoading ? .linear(duration: 1).repeatForever(autoreverses: false) : .default, value: manager.isLoading)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.gray)
+            .help("Обновить")
+        }
+        .fixedSize()
     }
 
     // MARK: - Content
 
     @ViewBuilder
     private var content: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(manager.selectedList.title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .lineLimit(1)
-                Text("\(manager.tasks.count - manager.recentlyCompleted.count)")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.gray)
-                Spacer()
-                if let error = manager.errorMessage {
-                    Label(error, systemImage: "exclamationmark.triangle.fill")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.orange)
-                        .lineLimit(1)
-                        .help(error)
-                }
-            }
-
-            if serverURL.isEmpty {
-                placeholder("Укажите адрес сервера Things в настройках → Tasks", icon: "gearshape")
-            } else if manager.tasks.isEmpty {
-                if manager.isLoading {
-                    placeholder("Загрузка…", icon: "hourglass")
-                } else if manager.errorMessage == nil {
-                    placeholder("Задач нет", icon: "checkmark.circle")
-                } else {
-                    Spacer()
-                }
+        if serverURL.isEmpty {
+            placeholder("Укажите адрес сервера Things в настройках → Tasks", icon: "gearshape")
+        } else if manager.tasks.isEmpty {
+            if manager.isLoading {
+                placeholder("Загрузка…", icon: "hourglass")
+            } else if let error = manager.errorMessage {
+                placeholder(error, icon: "exclamationmark.triangle")
             } else {
-                ScrollView(.vertical, showsIndicators: false) {
-                    LazyVStack(alignment: .leading, spacing: 2) {
-                        ForEach(manager.tasks) { task in
-                            TaskRow(
-                                task: task,
-                                subtitle: subtitle(for: task),
-                                completed: manager.recentlyCompleted.contains(task.uuid)
-                            ) {
-                                withAnimation(.smooth(duration: 0.2)) {
-                                    manager.toggleCompleted(task)
-                                }
+                placeholder("Задач нет", icon: "checkmark.circle")
+            }
+        } else if manager.visibleTasks.isEmpty {
+            placeholder("Нет задач с выбранными тегами", icon: "tag")
+        } else {
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
+                    ForEach(manager.visibleTasks) { task in
+                        TaskRow(
+                            task: task,
+                            subtitle: subtitle(for: task),
+                            completed: manager.recentlyCompleted.contains(task.uuid)
+                        ) {
+                            withAnimation(.smooth(duration: 0.2)) {
+                                manager.toggleCompleted(task)
                             }
                         }
                     }
-                    .padding(.bottom, 6)
                 }
+                .padding(.bottom, 6)
             }
         }
     }
@@ -180,7 +204,10 @@ struct TasksView: View {
     private func placeholder(_ text: String, icon: String) -> some View {
         VStack(spacing: 6) {
             Image(systemName: icon).font(.system(size: 18))
-            Text(text).font(.system(size: 11))
+            Text(text)
+                .font(.system(size: 11))
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
         }
         .foregroundStyle(.gray)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -217,10 +244,10 @@ private struct TaskRow: View {
     @State private var hovering = false
 
     var body: some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top, spacing: 6) {
             Button(action: onToggle) {
                 Image(systemName: completed ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 13))
+                    .font(.system(size: 12))
                     .foregroundStyle(completed ? Color.accentColor : .gray)
             }
             .buttonStyle(.plain)
@@ -228,13 +255,13 @@ private struct TaskRow: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(task.title)
-                    .font(.system(size: 12))
+                    .font(.system(size: 11.5))
                     .strikethrough(completed)
                     .foregroundStyle(completed ? .gray : .white)
                     .lineLimit(2)
                 if let subtitle {
                     Text(subtitle)
-                        .font(.system(size: 10))
+                        .font(.system(size: 9.5))
                         .foregroundStyle(.gray)
                         .lineLimit(1)
                 }
@@ -242,16 +269,17 @@ private struct TaskRow: View {
             Spacer(minLength: 0)
             if task.note?.isEmpty == false {
                 Image(systemName: "doc.text")
-                    .font(.system(size: 9))
+                    .font(.system(size: 8))
                     .foregroundStyle(.gray)
                     .help(task.note ?? "")
             }
         }
-        .padding(.vertical, 3)
+        .padding(.vertical, 4)
         .padding(.horizontal, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 6)
-                .fill(hovering ? Color.white.opacity(0.06) : .clear)
+                .fill(Color.white.opacity(hovering ? 0.09 : 0.04))
         )
         .onHover { hovering = $0 }
         .opacity(completed ? 0.6 : 1)

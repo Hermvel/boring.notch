@@ -40,6 +40,11 @@ struct ThingsList: Identifiable, Hashable {
     }
 }
 
+struct ThingsTag: Identifiable, Hashable {
+    let id: String
+    let name: String
+}
+
 @MainActor
 final class ThingsManager: ObservableObject {
     static let shared = ThingsManager()
@@ -55,6 +60,30 @@ final class ThingsManager: ObservableObject {
     /// Tasks ticked in this session — kept visible (struck through) until the next refresh,
     /// so a mis-click can be undone.
     @Published private(set) var recentlyCompleted: Set<String> = []
+
+    /// Tag id → tag name, loaded once with areas/projects.
+    @Published private(set) var tagNames: [String: String] = [:]
+    /// Tags picked in the filter row; empty = show everything.
+    @Published var selectedTags: Set<String> = []
+
+    /// Tasks after the tag filter (a task matches if it has any of the selected tags).
+    var visibleTasks: [ThingsTask] {
+        guard !selectedTags.isEmpty else { return tasks }
+        return tasks.filter { !selectedTags.isDisjoint(with: $0.tags ?? []) }
+    }
+
+    /// Tags that actually occur in the current list, most used first.
+    var availableTags: [ThingsTag] {
+        var counts: [String: Int] = [:]
+        for task in tasks { for tag in task.tags ?? [] { counts[tag, default: 0] += 1 } }
+        return counts
+            .sorted { $0.value != $1.value ? $0.value > $1.value : (tagNames[$0.key] ?? "") < (tagNames[$1.key] ?? "") }
+            .compactMap { entry in tagNames[entry.key].map { ThingsTag(id: entry.key, name: $0) } }
+    }
+
+    func toggleTag(_ id: String) {
+        if selectedTags.contains(id) { selectedTags.remove(id) } else { selectedTags.insert(id) }
+    }
 
     private let client = ThingsClient()
     private var refreshTimer: Timer?
@@ -102,6 +131,8 @@ final class ThingsManager: ObservableObject {
         areas = []
         projects = []
         tasks = []
+        tagNames = [:]
+        selectedTags = []
         await loadContainers()
         await refresh()
     }
@@ -121,6 +152,7 @@ final class ThingsManager: ObservableObject {
         selectedList = list
         Defaults[.thingsLastListID] = list.id
         tasks = []
+        selectedTags = []
         Task { await refresh() }
     }
 
@@ -128,9 +160,11 @@ final class ThingsManager: ObservableObject {
         do {
             async let areaItems = client.listContainers(tool: "things_list_areas", serverURL: serverURL, token: token)
             async let projectItems = client.listContainers(tool: "things_list_projects", serverURL: serverURL, token: token)
-            let (a, p) = try await (areaItems, projectItems)
+            async let tagItems = client.listContainers(tool: "things_list_tags", serverURL: serverURL, token: token)
+            let (a, p, t) = try await (areaItems, projectItems, tagItems)
             areas = a.map(ThingsList.area)
             projects = p.map(ThingsList.project)
+            tagNames = Dictionary(t.map { ($0.uuid, $0.title) }, uniquingKeysWith: { first, _ in first })
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -156,6 +190,9 @@ final class ThingsManager: ObservableObject {
             // A newer request (e.g. user switched lists) already started — drop this answer.
             guard generation == loadGeneration else { return }
             tasks = result.filter(\.isOpen)
+            // Drop filter tags that no longer occur in this list.
+            let present = Set(tasks.flatMap { $0.tags ?? [] })
+            selectedTags.formIntersection(present)
             recentlyCompleted = []
             errorMessage = nil
             lastUpdated = Date()
