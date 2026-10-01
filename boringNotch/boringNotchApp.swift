@@ -281,6 +281,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
 
+        // Custom: clipboard history must record even while the notch is closed.
+        Task { @MainActor in ClipboardManager.shared.start() }
+
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(screenConfigurationDidChange),

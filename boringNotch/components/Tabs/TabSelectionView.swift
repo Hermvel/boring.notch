@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Defaults
 
 struct TabModel: Identifiable {
     let id = UUID()
@@ -16,15 +17,34 @@ struct TabModel: Identifiable {
 
 let tabs = [
     TabModel(label: "Home", icon: "house.fill", view: .home),
-    TabModel(label: "Shelf", icon: "tray.fill", view: .shelf)
+    TabModel(label: "Shelf", icon: "tray.fill", view: .shelf),
+    TabModel(label: "Tasks", icon: "checklist", view: .tasks),
+    TabModel(label: "Clipboard", icon: "doc.on.clipboard", view: .clipboard),
+    TabModel(label: "Screenshots", icon: "camera.viewfinder", view: .screenshots)
 ]
+
+/// Tabs hidden in Settings are skipped.
+private func isTabEnabled(_ view: NotchViews) -> Bool {
+    switch view {
+    case .home: return true
+    case .shelf: return Defaults[.boringShelf]
+    case .tasks: return Defaults[.showTasksTab]
+    case .clipboard: return Defaults[.showClipboardTab]
+    case .screenshots: return Defaults[.showScreenshotsTab]
+    }
+}
 
 struct TabSelectionView: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @Namespace var animation
+    @Default(.boringShelf) private var shelfEnabled
+    @Default(.showTasksTab) private var tasksEnabled
+    @Default(.showClipboardTab) private var clipboardEnabled
+    @Default(.showScreenshotsTab) private var screenshotsEnabled
+
     var body: some View {
         HStack(spacing: 0) {
-            ForEach(tabs) { tab in
+            ForEach(tabs.filter { isTabEnabled($0.view) }) { tab in
                     TabButton(label: tab.label, icon: tab.icon, selected: coordinator.currentView == tab.view) {
                         withAnimation(.smooth) {
                             coordinator.currentView = tab.view

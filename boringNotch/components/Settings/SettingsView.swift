@@ -51,6 +51,12 @@ struct SettingsView: View {
                 NavigationLink(value: "Shelf") {
                     Label("Shelf", systemImage: "books.vertical")
                 }
+                NavigationLink(value: "Tasks") {
+                    Label("Tasks", systemImage: "checklist")
+                }
+                NavigationLink(value: "ClipboardScreenshots") {
+                    Label("Clipboard & Screenshots", systemImage: "doc.on.clipboard")
+                }
                 NavigationLink(value: "Shortcuts") {
                     Label("Shortcuts", systemImage: "keyboard")
                 }
@@ -85,6 +91,10 @@ struct SettingsView: View {
                     Charge()
                 case "Shelf":
                     Shelf()
+                case "Tasks":
+                    TasksSettings()
+                case "ClipboardScreenshots":
+                    ClipboardScreenshotsSettings()
                 case "Shortcuts":
                     Shortcuts()
                 case "Extensions":

@@ -16,7 +16,8 @@ struct BoringHeader: View {
     var body: some View {
         HStack(spacing: 0) {
             HStack {
-                if (!tvm.isEmpty || coordinator.alwaysShowTabs) && Defaults[.boringShelf] {
+                // Custom: tabs are always useful now (Tasks / Clipboard / Screenshots), not only for the shelf.
+                if !tvm.isEmpty || coordinator.alwaysShowTabs {
                     TabSelectionView()
                 } else if vm.notchState == .open {
                     EmptyView()

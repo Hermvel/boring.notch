@@ -16,10 +16,11 @@ struct TabButton: View {
     var body: some View {
         Button(action: onClick) {
             Image(systemName: icon)
-                .padding(.horizontal, 15)
+                .padding(.horizontal, 10)
                 .contentShape(Capsule())
         }
         .buttonStyle(PlainButtonStyle())
+        .help(label)
     }
 }
 
